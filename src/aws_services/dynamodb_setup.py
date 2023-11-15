@@ -29,8 +29,12 @@ def setup_dynamodb():
         print(f"Table {table_name} created successfully.")
         return response
     except ClientError as e:
-        print(f"An error occurred: {e.response['Error']['Message']}")
+        if e.response['Error']['Code'] == 'ResourceInUseException':
+            print(f"Table {table_name} already exists.")
+        else:
+            print(f"An error occurred: {e.response['Error']['Message']}")
         return None
 
 if __name__ == '__main__':
     setup_dynamodb()
+
