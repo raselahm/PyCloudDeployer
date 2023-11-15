@@ -1,7 +1,8 @@
 import click
 # Import setup functions from aws_services
 from aws_services.dynamodb_setup import setup_dynamodb
-# Other AWS service setup imports will go here
+# Import the add_user command from cli.commands
+from cli.commands import adduser
 
 @click.group()
 def cli():
@@ -16,11 +17,8 @@ def deploy_services():
     # Calls to other AWS service setup functions will go here
     click.echo("AWS services deployed successfully.")
 
-@cli.command()
-def add_user():
-    """Placeholder for add_user functionality."""
-    # This will later be implemented to add a user to DynamoDB
-    click.echo("User added successfully.")
+# Integrating the add_user command from cli.commands
+cli.add_command(adduser)
 
 @cli.command()
 def delete_user():
