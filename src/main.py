@@ -2,7 +2,7 @@ import click
 # Import setup functions from aws_services
 from aws_services.dynamodb_setup import setup_dynamodb
 # Import the add_user command from cli.commands
-from cli.commands import adduser, uploadcsv, deletecsv
+from cli.commands import adduser, uploadcsv, deletecsv, deleteuser
 
 @click.group()
 def cli():
@@ -19,8 +19,7 @@ def deployservices():
 cli.add_command(adduser)
 cli.add_command(uploadcsv)
 cli.add_command(deletecsv)
-
-# Placeholder for delete_user command...
+cli.add_command(deleteuser)
 
 if __name__ == '__main__':
     cli()
