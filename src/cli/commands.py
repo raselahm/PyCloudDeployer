@@ -1,7 +1,7 @@
 import click
 import re
 from datetime import datetime
-from aws_services.user_management.add_user import add_user_to_db
+from aws_services.user_management.adduser import add_user_to_db
 
 def validate_email(ctx, param, value):
     pattern = r'[^@]+@[^@]+\.[^@]+'
