@@ -2,6 +2,7 @@ import click
 import re
 from datetime import datetime
 from aws_services.user_management.adduser import add_user_to_db
+from aws_services.user_management.csvoperations import upload_users_from_csv, delete_users_from_csv
 
 def validate_email(ctx, param, value):
     pattern = r'[^@]+@[^@]+\.[^@]+'
@@ -25,3 +26,17 @@ def adduser(email, name, dob):
         click.echo('User added successfully.')
     else:
         click.echo('Failed to add user.')
+
+@click.command()
+@click.argument('file_path')
+def uploadcsv(file_path):
+    """Upload users from a CSV file."""
+    upload_users_from_csv(file_path)
+    click.echo(f"Finished processing {file_path} for upload.")
+
+@click.command()
+@click.argument('file_path')
+def deletecsv(file_path):
+    """Delete users from a CSV file."""
+    delete_users_from_csv(file_path)
+    click.echo(f"Finished processing {file_path} for deletion.")
