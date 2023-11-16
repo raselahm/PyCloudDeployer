@@ -2,6 +2,7 @@ import click
 # Import setup functions from aws_services
 from aws_services.dynamodb_setup import setup_dynamodb
 from aws_services.iam_setup import create_lambda_execution_role  # Import for IAM role creation
+from aws_services.lambda_setup import deploy_lambda_function
 # Import commands from cli.commands
 from cli.commands import adduser, uploadcsv, deletecsv, deleteuser
 
@@ -15,8 +16,8 @@ def deployservices():
     """Deploy necessary AWS services."""
     click.echo("Deploying AWS services...")
     setup_dynamodb()  
-    lambda_role_arn = create_lambda_execution_role()  # Create IAM role for Lambda
-    # Future integration for Lambda deployment will use lambda_role_arn
+    lambda_role_arn = create_lambda_execution_role()  
+    deploy_lambda_function(lambda_role_arn)
     click.echo("AWS services deployed successfully.")
 
 cli.add_command(adduser)
