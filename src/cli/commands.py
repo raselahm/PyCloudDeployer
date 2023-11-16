@@ -1,6 +1,8 @@
 import click
 import re
 from datetime import datetime
+import boto3
+import pytz
 from aws_services.user_management.adduser import add_user_to_db
 from aws_services.user_management.deleteuser import delete_user
 from aws_services.user_management.csvoperations import upload_users_from_csv, delete_users_from_csv
@@ -47,3 +49,23 @@ def deletecsv(file_path):
 def deleteuser(email):
     success, message = delete_user(email)
     click.echo(message)
+
+def create_cron_expression(hour, minute, timezone='America/New_York'):
+    local = pytz.timezone(timezone)
+    naive = datetime.now().replace(hour=hour, minute=minute, second=0, microsecond=0)
+    local_dt = local.localize(naive, is_dst=None)
+    utc_dt = local_dt.astimezone(pytz.utc)
+    return f'cron({utc_dt.minute} {utc_dt.hour} * * ? *)'
+
+@click.command(name='settriggertime')
+@click.option('--hour', type=int, prompt='Hour (0-23)')
+@click.option('--minute', type=int, prompt='Minute (0-59)')
+def settriggertime(hour, minute):
+    cloudwatch_events_client = boto3.client('events')
+    cron_expression = create_cron_expression(hour, minute)
+    cloudwatch_events_client.put_rule(
+        Name='PyCloudDeployerDailyTrigger',
+        ScheduleExpression=cron_expression,
+        State='ENABLED'
+    )
+    click.echo(f"Trigger time set to {hour}:{minute} (local time). Cron expression: {cron_expression}")

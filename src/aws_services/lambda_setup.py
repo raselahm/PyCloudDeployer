@@ -1,36 +1,47 @@
 import boto3
 import zipfile
-import io
 import os
+import sys
 
 def deploy_lambda_function(lambda_role_arn):
     lambda_client = boto3.client('lambda')
-
-    # Path to Lambda function code
     lambda_function_path = os.path.join(os.path.dirname(__file__), 'lambda_functions', 'lambda_function.py')
 
-    # Zip Lambda function code
-    zip_buffer = io.BytesIO()
-    with zipfile.ZipFile(zip_buffer, 'a') as zf:
-        zf.writestr('lambda_function.py', open(lambda_function_path, 'rb').read())
-    zip_buffer.seek(0)
+    # Find the site-packages directory
+    site_packages_path = next(p for p in sys.path if 'site-packages' in p)
 
-    # Check if the function already exists
+    # Locate the pytz directory within site-packages
+    pytz_path = os.path.join(site_packages_path, 'pytz')
+
+    zip_file_name = 'lambda_function_package.zip'
+
+    with zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED) as zf:
+        # Add lambda_function.py
+        zf.write(lambda_function_path, 'lambda_function.py')
+
+        # Add pytz library
+        for folder, subfolders, files in os.walk(pytz_path):
+            for file in files:
+                full_path = os.path.join(folder, file)
+                rel_path = os.path.relpath(full_path, site_packages_path)
+                zf.write(full_path, rel_path)
+
+    with open(zip_file_name, 'rb') as zip_file:
+        zip_buffer = zip_file.read()
+
     try:
         lambda_client.get_function(FunctionName='BirthdayEmailFunction')
         print("Lambda function already exists.")
     except lambda_client.exceptions.ResourceNotFoundException:
-        # Deploy the Lambda function if it doesn't exist
         lambda_client.create_function(
             FunctionName='BirthdayEmailFunction',
             Runtime='python3.11',  
             Role=lambda_role_arn,
             Handler='lambda_function.lambda_handler',
-            Code={'ZipFile': zip_buffer.read()},
+            Code={'ZipFile': zip_buffer},
         )
         print("Lambda function deployed successfully.")
 
-        # Permission for EventBridge
         lambda_client.add_permission(
             FunctionName='BirthdayEmailFunction',
             StatementId='EventBridgeInvoke',
@@ -39,4 +50,3 @@ def deploy_lambda_function(lambda_role_arn):
         )
         print("Permission for EventBridge to invoke Lambda function added.")
 
-        

@@ -1,4 +1,5 @@
 import boto3
+import pytz
 from datetime import datetime
 
 def lambda_handler(event, context):
@@ -6,8 +7,9 @@ def lambda_handler(event, context):
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table('Users')
 
-    # Get today's date in the format stored in DynamoDB
-    today_date = datetime.now().strftime('%Y-%m-%d')
+    # Convert UTC time to Eastern Time Zone
+    eastern = pytz.timezone('America/New_York')
+    today_date = datetime.now(pytz.utc).astimezone(eastern).strftime('%Y-%m-%d')
 
     # Scan the table with a filter for today's date
     response = table.scan(
