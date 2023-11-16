@@ -29,3 +29,14 @@ def deploy_lambda_function(lambda_role_arn):
             Code={'ZipFile': zip_buffer.read()},
         )
         print("Lambda function deployed successfully.")
+
+        # Permission for EventBridge
+        lambda_client.add_permission(
+            FunctionName='BirthdayEmailFunction',
+            StatementId='EventBridgeInvoke',
+            Action='lambda:InvokeFunction',
+            Principal='events.amazonaws.com'
+        )
+        print("Permission for EventBridge to invoke Lambda function added.")
+
+        
