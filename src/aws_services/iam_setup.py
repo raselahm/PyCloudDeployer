@@ -15,7 +15,6 @@ def create_lambda_execution_role():
     })
 
     try:
-        # Create the role
         response = iam_client.create_role(
             RoleName=role_name,
             AssumeRolePolicyDocument=assume_role_policy
@@ -37,15 +36,14 @@ def create_lambda_execution_role():
                     'Action': [
                         'dynamodb:*',
                         'cloudwatch:*',
-                        'ses:SendEmail', 'ses:SendRawEmail',
-                        'ssm:GetParameter'  # Added permission for SSM Parameter Store
+                        'ses:SendEmail', 'ses:SendRawEmail', 'ses:VerifyEmailIdentity',  # Updated to include VerifyEmailIdentity
+                        'ssm:GetParameter'
                     ],
                     'Resource': '*'  
                 }
             ]
         }
 
-        # Put inline policy
         iam_client.put_role_policy(
             RoleName=role_name,
             PolicyName='PyCloudDeployerAdditionalPermissions',

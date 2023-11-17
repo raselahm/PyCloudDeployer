@@ -37,20 +37,22 @@ def upload_users_from_csv(file_path):
 
     if not is_valid_csv(file_path, required_fields):
         print("Invalid CSV file or missing fields.")
-        return
+        return []
 
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(table_name)
     items_to_upload = []
+    uploaded_users = []
 
     with open(file_path, mode='r', newline='', encoding='utf-8') as file:
         reader = csv.DictReader(file)
         for row in reader:
             email = row['email']
             if email_exists_in_db(table, email):
-                print(f"Email already exists in database: {email}, if you want to update the username or DOB, use the adduser command.")
+                print(f"Email already exists in database: {email}")
                 continue
             items_to_upload.append(row)
+            uploaded_users.append(row)
 
             if len(items_to_upload) == 25:
                 batch_write_items(dynamodb_client, table_name, items_to_upload, 'PutRequest')
@@ -58,6 +60,8 @@ def upload_users_from_csv(file_path):
 
     if items_to_upload:
         batch_write_items(dynamodb_client, table_name, items_to_upload, 'PutRequest')
+
+    return uploaded_users
 
 def delete_users_from_csv(file_path):
     dynamodb_client = boto3.client('dynamodb')

@@ -1,8 +1,7 @@
 import boto3
 
-def setup_cloudwatch_event(lambda_function_name):
+def setup_cloudwatch_event(lambda_function_arn):
     cloudwatch_events_client = boto3.client('events')
-    lambda_client = boto3.client('lambda')
 
     # CloudWatch event rule name
     rule_name = 'PyCloudDeployerDailyTrigger'
@@ -17,10 +16,10 @@ def setup_cloudwatch_event(lambda_function_name):
         State='ENABLED'
     )
 
-    # Link the rule to the Lambda function
+    # Link the rule to the Lambda function using ARN
     cloudwatch_events_client.put_targets(
         Rule=rule_name,
-        Targets=[{'Id': '1', 'Arn': lambda_client.get_function(FunctionName=lambda_function_name)['Configuration']['FunctionArn']}]
+        Targets=[{'Id': '1', 'Arn': lambda_function_arn}]
     )
 
-    print(f"CloudWatch Event Rule '{rule_name}' set to trigger Lambda function '{lambda_function_name}' daily.")
+    print(f"CloudWatch Event Rule '{rule_name}' set to trigger Lambda function daily.")

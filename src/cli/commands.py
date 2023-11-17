@@ -1,3 +1,4 @@
+import json
 import click
 import re
 from datetime import datetime
@@ -28,15 +29,30 @@ def validate_date(ctx, param, value):
 def adduser(email, name, dob):
     if add_user_to_db(email, name, dob):
         click.echo('User added successfully.')
+        # Invoke email verification lambda function
+        lambda_client = boto3.client('lambda')
+        lambda_client.invoke(
+            FunctionName='email_verification_lambda', 
+            InvocationType='Event',
+            Payload=json.dumps({'email': email})
+        )
     else:
         click.echo('Failed to add user.')
 
 @click.command()
 @click.argument('file_path')
 def uploadcsv(file_path):
-    """Upload users from a CSV file."""
-    upload_users_from_csv(file_path)
+    uploaded_users = upload_users_from_csv(file_path)
     click.echo(f"Attempted to upload users from {file_path}.")
+
+    # Invoke email verification lambda for each uploaded user
+    lambda_client = boto3.client('lambda')
+    for user in uploaded_users:
+        lambda_client.invoke(
+            FunctionName='email_verification_lambda', 
+            InvocationType='Event',
+            Payload=json.dumps({'email': user['email']})
+        )
 
 @click.command()
 @click.argument('file_path')
