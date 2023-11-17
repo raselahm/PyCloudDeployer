@@ -18,11 +18,34 @@ def lambda_handler(event, context):
         ExpressionAttributeValues={':today': today_date}
     )
 
-    # Process and print each item that matches today's date
+    # SES client and SSM client
+    ses_client = boto3.client('ses')
+    ssm_client = boto3.client('ssm')
+
+    # Retrieve the verified email from Parameter Store
+    sender_email = ssm_client.get_parameter(Name='PyCloudDeployerVerifiedEmail')['Parameter']['Value']
+
+    # Process each item that matches today's date
     for item in response.get('Items', []):
-        print(f"Email: {item.get('email')} - DOB: {item.get('date_of_birth')}")
+        recipient_email = item.get('email')
+        email_subject = 'Happy Birthday!'
+        email_body = f"Happy Birthday {item.get('name', 'User')}!"
+
+        # Send email using SES
+        try:
+            ses_client.send_email(
+                Source=sender_email,
+                Destination={'ToAddresses': [recipient_email]},
+                Message={
+                    'Subject': {'Data': email_subject},
+                    'Body': {'Text': {'Data': email_body}}
+                }
+            )
+            print(f"Sent birthday email to: {recipient_email}")
+        except Exception as e:
+            print(f"Failed to send email to {recipient_email}: {e}")
 
     return {
         'statusCode': 200,
-        'body': 'Processed DynamoDB records for today successfully'
+        'body': 'Processed DynamoDB records and sent emails successfully'
     }

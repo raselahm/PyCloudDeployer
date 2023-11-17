@@ -6,6 +6,7 @@ import pytz
 from aws_services.user_management.adduser import add_user_to_db
 from aws_services.user_management.deleteuser import delete_user
 from aws_services.user_management.csvoperations import upload_users_from_csv, delete_users_from_csv
+from aws_services.ses_setup import setup_ses, check_email_verification_status
 
 def validate_email(ctx, param, value):
     pattern = r'[^@]+@[^@]+\.[^@]+'
@@ -69,3 +70,11 @@ def settriggertime(hour, minute):
         State='ENABLED'
     )
     click.echo(f"Trigger time set to {hour}:{minute} (local time). Cron expression: {cron_expression}")
+
+@click.command(name='setupses')
+def setupses():
+    email = click.prompt("Please enter your email for SES", type=str, callback=validate_email)
+    if check_email_verification_status(email):
+        if not click.confirm(f"The email {email} is already verified. Do you want to resend the verification email?"):
+            return
+    setup_ses(email)

@@ -2,6 +2,7 @@ import boto3
 import zipfile
 import os
 import sys
+import time
 
 def deploy_lambda_function(lambda_role_arn):
     lambda_client = boto3.client('lambda')
@@ -33,6 +34,7 @@ def deploy_lambda_function(lambda_role_arn):
         lambda_client.get_function(FunctionName='BirthdayEmailFunction')
         print("Lambda function already exists.")
     except lambda_client.exceptions.ResourceNotFoundException:
+        time.sleep(10)
         lambda_client.create_function(
             FunctionName='BirthdayEmailFunction',
             Runtime='python3.11',  

@@ -28,16 +28,17 @@ def create_lambda_execution_role():
             PolicyArn='arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
         )
 
-        # Inline policy to grant access to DynamoDB, CloudWatch, and SES
+        # Inline policy to grant access to DynamoDB, CloudWatch, SES, and SSM
         policy = {
             'Version': '2012-10-17',
             'Statement': [
                 {
                     'Effect': 'Allow',
                     'Action': [
-                        'dynamodb:*',  
-                        'cloudwatch:*',  
-                        'ses:SendEmail', 'ses:SendRawEmail'  
+                        'dynamodb:*',
+                        'cloudwatch:*',
+                        'ses:SendEmail', 'ses:SendRawEmail',
+                        'ssm:GetParameter'  # Added permission for SSM Parameter Store
                     ],
                     'Resource': '*'  
                 }
@@ -60,3 +61,4 @@ def create_lambda_execution_role():
             raise e
 
     return role_arn
+
