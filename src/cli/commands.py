@@ -8,6 +8,7 @@ from aws_services.user_management.adduser import add_user_to_db
 from aws_services.user_management.deleteuser import delete_user
 from aws_services.user_management.csvoperations import upload_users_from_csv, delete_users_from_csv
 from aws_services.ses_setup import setup_ses, check_email_verification_status
+from aws_services.teardown import create_s3_bucket, bucket_exists, teardown_services
 
 def validate_email(ctx, param, value):
     pattern = r'[^@]+@[^@]+\.[^@]+'
@@ -94,3 +95,36 @@ def setupses():
         if not click.confirm(f"The email {email} is already verified. Do you want to resend the verification email?"):
             return
     setup_ses(email)
+
+@click.command()
+def teardown():
+    """Safely remove all deployed AWS services."""
+    if click.confirm('Do you want to export DynamoDB data to an S3 bucket before tearing down services?'):
+        export_attempted = False
+        while not export_attempted:
+            bucket_name = click.prompt('Enter the S3 bucket name', type=str)
+
+            # Check if the S3 bucket exists
+            if bucket_exists(bucket_name):
+                if click.confirm(f"S3 bucket '{bucket_name}' already exists. Would you like to use this existing bucket?"):
+                    export_attempted = True
+                else:
+                    click.echo("Please enter a different bucket name.")
+            else:
+                # Attempt to create the bucket
+                try:
+                    create_s3_bucket(bucket_name)
+                    click.echo(f"S3 bucket '{bucket_name}' created successfully.")
+                    export_attempted = True
+                except Exception as e:
+                    click.echo(f"Error creating S3 bucket '{bucket_name}': {e}")
+                    if not click.confirm("Do you want to try a different bucket name?"):
+                        if click.confirm("Do you want to proceed with teardown without exporting data?"):
+                            export_attempted = True
+                        else:
+                            click.echo("Teardown aborted. Please resolve the issue and try again.")
+                            return
+
+        teardown_services(export_to_s3=export_attempted, s3_bucket_name=bucket_name)
+    else:
+        teardown_services(export_to_s3=False)

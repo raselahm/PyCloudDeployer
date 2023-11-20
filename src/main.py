@@ -5,7 +5,7 @@ from aws_services.iam_setup import create_lambda_execution_role
 from aws_services.lambda_setup import deploy_all_lambda_functions
 from aws_services.cloudwatch_setup import setup_cloudwatch_event
 from aws_services.ses_setup import setup_ses
-from cli.commands import adduser, uploadcsv, deletecsv, deleteuser, settriggertime, setupses, validate_email as validate_email_command
+from cli.commands import adduser, uploadcsv, deletecsv, deleteuser, settriggertime, setupses, validate_email as validate_email_command, teardown
 
 @click.group()
 def cli():
@@ -44,6 +44,7 @@ cli.add_command(deletecsv)
 cli.add_command(deleteuser)
 cli.add_command(settriggertime)
 cli.add_command(setupses)
+cli.add_command(teardown)
 
 if __name__ == '__main__':
     cli()
