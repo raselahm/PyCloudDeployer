@@ -1,5 +1,7 @@
 import click
 import time
+from utils.config_check import check_aws_config
+from utils.dependency_check import check_dependencies
 from aws_services.dynamodb_setup import setup_dynamodb
 from aws_services.iam_setup import create_lambda_execution_role
 from aws_services.lambda_setup import deploy_all_lambda_functions
@@ -15,6 +17,17 @@ def cli():
 @cli.command()
 def deployservices():
     """Deploy necessary AWS services."""
+
+    # Perform AWS configuration check
+    if not check_aws_config():
+        click.echo("AWS configuration check failed. Please ensure your AWS configuration and credentials are set up correctly.")
+        return
+
+    # Perform dependency check
+    if not check_dependencies():
+        click.echo("Dependency check failed. Please ensure all required dependencies are installed and up to date.")
+        return
+
     click.echo("Deploying AWS services...")
     setup_dynamodb()
     lambda_role_arn = create_lambda_execution_role()
